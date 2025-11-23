@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AKITO CODE REVEALER</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Poppins:wght@600;800&display=swap');
+    
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{
+      font-family:'Poppins',sans-serif;
+      background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+      color:#fff;min-height:100vh;display:flex;flex-direction:column;
+      align-items:center;padding:40px 20px;position:relative;overflow-x:hidden;
+    }
+    .container{
+      width:100%;max-width:900px;background:rgba(255,255,255,0.05);
+      backdrop-filter:blur(15px);border-radius:20px;padding:40px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);
+      position:relative;z-index:1;
+    }
+    h1{
+      text-align:center;font-size:42px;
+      background:linear-gradient(45deg,#ff00aa,#00ffff);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      margin-bottom:30px;font-weight:800;
+    }
+    .watermark{
+      position:fixed;bottom:20px;left:20px;
+      font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;
+      color:rgba(255,255,255,0.15);letter-spacing:3px;text-transform:uppercase;
+      pointer-events:none;z-index:0;transform:rotate(-30deg);user-select:none;
+      animation:float 8s infinite ease-in-out;
+    }
+    @keyframes float{0%,100%{transform:rotate(-30deg) translateY(0)}50%{transform:rotate(-30deg) translateY(-15px)}}
+
+    .input-area{display:flex;gap:15px;margin-bottom:30px;flex-wrap:wrap;}
+    input[type="text"]{
+      flex:1;padding:18px 20px;border:none;border-radius:50px;
+      background:rgba(255,255,255,0.1);color:white;font-size:16px;outline:none;min-width:280px;
+    }
+    input::placeholder{color:rgba(255,255,255,0.6);}
+    button{
+      padding:18px 40px;background:linear-gradient(45deg,#ff00aa,#00ffaa);
+      color:black;border:none;border-radius:50px;font-weight:bold;font-size:18px;
+      cursor:pointer;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,0.3);
+    }
+    button:hover{transform:translateY(-5px);box-shadow:0 15px 40px rgba(255,0,170,0.4);}
+
+    /* YANG PENTING INI BRO → position: relative di code-area */
+    .code-area{
+      margin-top:30px;background:#1e1e1e;border-radius:15px;overflow:hidden;
+      display:none;animation:fadeIn .8s ease;position:relative; /* <<< INI FIX-NYA */
+    }
+    pre{
+      margin:0!important;padding:60px 20px 20px 20px!important; /* atas lebih besar biar tombol ga nutup kode */
+      font-family:'JetBrains Mono',monospace;font-size:15px;line-height:1.6;
+      color:#d4d4d4;overflow-x:auto;
+    }
+    .copy-btn{
+      position:absolute;top:15px;right:15px;padding:10px 20px;
+      background:#00ff88;color:black;border:none;border-radius:10px;
+      font-weight:bold;cursor:pointer;font-size:14px;z-index:10;
+      transition:.3s;
+    }
+    .copy-btn:hover{background:#00cc66;}
+    .copy-btn.copied{background:#00cc66;content:"COPIED!"}
+
+    .status{text-align:center;margin-top:20px;font-size:18px;opacity:0;transition:.5s;}
+    .success{color:#00ff88;opacity:1;}
+    .error{color:#ff0066;opacity:1;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+  </style>
+</head>
+<body>
+
+  <div class="watermark">AKITO</div>
+
+  <div class="container">
+    <h1>AKITO CODE REVEALER</h1>
+    <p style="text-align:center;margin-bottom:30px;opacity:0.8;">
+      Masukin link HTML → pencet tombol → kode langsung keluar semua!
+    </p>
+
+    <div class="input-area">
+      <input type="text" id="urlInput" placeholder="Contoh: https://pastebin.com/raw/xxxxxx">
+      <button id="revealBtn">REVEAL CODE</button>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <div class="code-area" id="codeArea">
+      <button class="copy-btn" id="copyBtn">COPY CODE</button>
+      <pre><code id="codeContent">Tunggu bro... kode lagi dimuat!</code></pre>
+    </div>
+  </div>
+
+<script>
+  const urlInput = document.getElementById('urlInput');
+  const revealBtn = document.getElementById('revealBtn');
+  const codeArea = document.getElementById('codeArea');
+  const codeContent = document.getElementById('codeContent');
+  const copyBtn = document.getElementById('copyBtn');
+  const status = document.getElementById('status');
+
+  revealBtn.onclick = async () => {
+    const url = urlInput.value.trim();
+    if (!url) return status.textContent = "Woi linknya mana bro!", status.className = "status error";
+
+    status.textContent = "Lagi ambil kode... sabar ya bro!";
+    status.className = "status";
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Link mati atau bukan HTML bro!");
+
+      const html = await res.text();
+      codeContent.textContent = html;
+      codeArea.style.display = "block";
+      status.textContent = "SUKSES! Kode udah muncul bro!";
+      status.className = "status success";
+      setTimeout(() => codeArea.scrollIntoView({behavior:"smooth"}), 300);
+
+    } catch (err) {
+      status.textContent = "Gagal bro! " + err.message;
+      status.className = "status error";
+      codeArea.style.display = "none";
+    }
+  };
+
+  // FIX COPY BUTTON — SEKARANG 100% JALAN
+  copyBtn.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(codeContent.textContent);
+      copyBtn.textContent = "COPIED!";
+      copyBtn.style.background = "#00cc66";
+      setTimeout(() => {
+        copyBtn.textContent = "COPY CODE";
+        copyBtn.style.background = "#00ff88";
+      }, 2000);
+    } catch (err) {
+      alert("Copy gagal bro! Coba pake Ctrl+C manual aja");
+    }
+  };
+
+  urlInput.addEventListener("keypress", e => e.key === "Enter" && revealBtn.click());
+</script>
+</body>
+</html>
